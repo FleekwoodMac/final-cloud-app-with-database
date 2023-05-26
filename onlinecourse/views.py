@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
-# <HINT> Import any new Models here
 from .models import Course, Enrollment, Lesson, Question, Choice, Submission
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
@@ -11,8 +10,6 @@ import logging
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 # Create your views here.
-
-
 def registration_request(request):
     context = {}
     if request.method == 'GET':
@@ -104,14 +101,7 @@ def enroll(request, course_id):
 
 
 # <HINT> Create a submit view to create an exam submission record for a course enrollment,
-# you may implement it based on following logic:
-         # Get user and course object, then get the associated enrollment object created when the user enrolled the course
-         # Create a submission object referring to the enrollment
-         # Collect the selected choices from exam form
-         # Add each selected choice object to the submission object
-         # Redirect to show_exam_result with the submission id
 def submit(request, course_id, lesson_id):
-    # Lesson id retrieved from the exam form
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
     
@@ -122,8 +112,6 @@ def submit(request, course_id, lesson_id):
     total_choices = extract_answers(request)
     submission.choices.set(total_choices)
 
-    # Passing the lesson id retrieved from the exam form
-    # This makes the selection of lesson independent of any choices made
     return HttpResponseRedirect(reverse(viewname="onlinecourse:exam_result", args=(course_id, lesson_id, submission_id)))
     
 
@@ -146,23 +134,14 @@ def extract_answers(request):
         # Calculate the total score
         
 def show_exam_result(request, course_id, lesson_id, submission_id):
-    # This lesson id is eventually used to retrieve the concerened lesson
     context = {}
-    # Get course
     course = get_object_or_404(Course, pk=course_id)
-    # Get Lesson
     lesson = get_object_or_404(Lesson, pk=lesson_id)
-    # Get question set for the above lesson
     question_set = Question.objects.filter(lesson=lesson)
-    # Get submission object
     submission = Submission.objects.get(id=submission_id)
-    # Retrieve the choice set of the submission
     choice_set = submission.choices.all()
-    # Get the total question count related to the concerened lesson
     count = question_set.count()
 
-    # Retrieve question ids in choice set - 
-    # Required to evaluate multiple choice questions and unattempted questions
     question_ids = [] 
     score = 0
     total_score = 0
@@ -180,8 +159,6 @@ def show_exam_result(request, course_id, lesson_id, submission_id):
     
     total_score = round((score/count)*100, 2)
 
-    # Pass the context with the concerened lesson along with other parameters - 
-    # This helps in displaying the content related to the lesson only
     context = {
         "course" : course,
         "lesson" : lesson,
